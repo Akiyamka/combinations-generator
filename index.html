@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combinations online generator</title>
+  <script src="//unpkg.com/alpinejs" defer></script>
+  <style>
+    html,
+    body {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .result {
+      overflow: auto;
+    }
+
+    html,
+    body,
+    .app {
+      display: flex;
+      flex-flow: column nowrap;
+      font-family: sans-serif;
+      font-size: 14px;
+      font-weight: normal;
+      color: #0f0f0f;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 1em auto;
+    }
+
+    label {
+      position: relative;
+    }
+
+    .label {
+      font-size: 9px;
+      position: absolute;
+      top: -4px;
+      left: 6px;
+      background-color: white;
+      padding: 0 4px;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .invariant-input-wrapper {
+      display: flex;
+      flex-flow: row nowrap;
+    }
+
+    .check {
+      margin: 8px 0;
+    }
+
+    .check-label {
+      display: block;
+    }
+
+    .invariant-input {
+      flex: 1;
+      max-width: 0;
+    }
+
+    form {
+      margin: auto;
+      display: flex;
+      flex-flow: row nowrap;
+      gap: 0.5em;
+      margin-top: 1em;
+      padding-bottom: 2em;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input {
+      padding: 0.6em 0.8em;
+      border-radius: 4px;
+      border: 2px solid #d9d9d9;
+    }
+
+    table {
+      border-spacing: 0px;
+      margin: 2em auto;
+    }
+
+    td {
+      border-bottom: 1px solid #bfbfbf;
+      padding: 0px 6px;
+    }
+
+    .counter {
+      font-size: smaller;
+      color: #747474;
+      text-align: center;
+    }
+
+    .total-counter {
+      text-align: center;
+      margin: 2em;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <h1>Combinations online generator</h1>
+  <div class="app" x-data="setupState()">
+    <form>
+      <label>
+        <span class="label">Possible values</span>
+        <input x-model="invariants" id="invariants-input" type="text" placeholder="foo, bar, baz" />
+      </label>
+      <label>
+        <span class="label">Length</span>
+        <input x-model="slots" id="slots-input" type="number" value="3" />
+      </label>
+    </form>
+    <div id="result" class="result">
+      <p class="total-counter">Combinations: <span x-text="count"></span></p>
+      <table>
+        <template x-for="(variant, index) in combinations">
+          <tr>
+            <td class="counter" x-text="index + 1 + '.'">
+              <input type="checkbox" />
+            </td>
+            <td>
+              <label class="check-label"><input class="check" type="checkbox" /></label>
+            </td>
+            <template x-for="val in variant">
+              <td x-text="val"></td>
+            </template>
+          </tr>
+        </template>
+      </table>
+    </div>
+  </div>
+  <script>
+    function setupState() {
+      return {
+        invariants: "🦅, 🐍, 🐋",
+        slots: 3,
+        combinations() {
+          return onChange(this.invariants, this.slots);
+        },
+        count() {
+          return this.combinations().length
+        }
+      };
+    }
+
+    function onChange(invariantsInput, slotsInput) {
+      const invariants = invariantsInput
+        .split(",")
+        .map((i) => i.trim())
+        .filter((i) => i.length !== 0);
+      const combinations = generatePossibleCombinations(
+        invariants,
+        Number(slotsInput),
+      );
+      return combinations;
+    }
+
+    function generatePossibleCombinations(invariants, slots) {
+      const maxIndex = invariants.length - 1;
+      const isMax = (v) => v >= maxIndex;
+      const counters = new Array(slots).fill(0);
+      const combinations = [];
+      const resetCounters = (index, counters) => {
+        for (let n = index - 1; n >= 0; n--) {
+          counters[n] = 0;
+        }
+      };
+
+      let k = 0;
+      while (k < invariants.length ** slots) {
+        combinations.push(counters.map((c) => invariants[c]));
+        let i = 0;
+        while (i < slots) {
+          if (!isMax(counters[i])) {
+            counters[i]++;
+            resetCounters(i, counters);
+            break;
+          }
+          i++;
+        }
+        k++;
+      }
+      return combinations;
+    }
+
+    const el = {
+      get: (id) => document.getElementById(id),
+    };
+
+  </script>
+</body>
+
+</html>
